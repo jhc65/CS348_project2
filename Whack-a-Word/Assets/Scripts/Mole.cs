@@ -3,9 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Mole : MonoBehaviour {
+    #region Variables and Delcarations
+    #endregion
 
-	// Use this for initialization
-	void Start () {
+    #region Mole Functions
+    #endregion
+
+    #region Unity Overrides
+    // Use this for initialization
+    void Start () {
 		
 	}
 	
@@ -13,4 +19,10 @@ public class Mole : MonoBehaviour {
 	void Update () {
 		
 	}
+
+    // OnMouseOver()
+    private void OnMouseOver() {
+
+    }
+    #endregion
 }
