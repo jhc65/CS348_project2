@@ -54,9 +54,12 @@ public class GameController : MonoBehaviour {
     public void ReceiveLetter(string letterIn) {
         if (wordList[currentWord][currentPosInWord] == Convert.ToChar(letterIn)) {
             wordDisplay.text = (wordDisplay.text + Convert.ToString(letterIn));
+            currentPosInWord++;
             if (wordDisplay.text == wordList[currentWord]) {
                 currentWord++;
+                currentPosInWord = 0;
                 isReadyForNewWord = true;
+                Invoke("HideDisplayedWord", 4f);
                 for (int i = 0; i < moles.Length; i++) {
                     moles[i].GetComponent<Mole>().SetText("");
                 }
@@ -73,6 +76,12 @@ public class GameController : MonoBehaviour {
     public void StartGame()
     {
         mainMenu.SetActive(false);
+        // Set Mole Colliders to Active
+        for (int i = 0; i < moles.Length; i++) {
+            moles[i].GetComponent<BoxCollider>().enabled = true;
+        }
+        InvokeRepeating("ShowAndHideMole", 0f, 1.5f/*Constants.Functions.RandomNumber(1, 3)*/);
+        Invoke("HideDisplayedWord", 4f);
         inGame.SetActive(true);
     }
 
@@ -108,6 +117,9 @@ public class GameController : MonoBehaviour {
         currentScore = 0;
         hiScore = 0; // Might need to read from a file or PlayerPreferences here.
         wordList = (string[])Constants.Functions.ShuffleStringArray(Constants.Words.wordListOne).Clone();
+
+        //InvokeRepeating("ShowAndHideMole", 0f, 1.5f/*Constants.Functions.RandomNumber(1, 3)*/);
+        //Invoke("HideDisplayedWord", 4f);
     }
 
     // Update is called once per frame
@@ -121,11 +133,11 @@ public class GameController : MonoBehaviour {
                 }
                 else {
                     wordDisplay.text = wordList[currentWord];
-                    Invoke("HideDisplayedWord", 4f);
+                    //Invoke("HideDisplayedWord", 4f);
                 }
             }
             else {
-                InvokeRepeating("ShowAndHideMole", 0f, Constants.Functions.RandomNumber(1, 3));
+                // idk it was being really weird
             }
         }
     }

@@ -5,7 +5,7 @@ using UnityEngine;
 public static class Constants {
 
     public static class Words {
-        public static string[] wordListOne = new string[] { "never", "mother", "busy", "eight", "rich", "locker", "hunter", "clue", "spray", "caterpillar", "untie" };
+        public static string[] wordListOne = new string[] { "NEVER", "MOTHER", "BUSY", "EIGHT", "RICH", "LOCKER", "HUNTER", "CLUE", "SPRAY", "CATERPILLAR", "UNTIE" };
     }
 
     public static class Mole_Stats {

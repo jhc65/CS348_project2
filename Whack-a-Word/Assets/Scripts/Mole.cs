@@ -41,6 +41,7 @@ public class Mole : MonoBehaviour
     // OnMouseOver()
     private void OnMouseOver() {
         if (Input.GetMouseButtonDown(0)) {
+            Debug.Log("you clicked me");
             gc.ReceiveLetter(displayText.text);
         }
     }
