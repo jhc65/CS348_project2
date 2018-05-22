@@ -14,6 +14,8 @@ public class GameController : MonoBehaviour {
     [SerializeField] Text endingHiScoreCounter;
     [SerializeField] GameObject[] moles;
     [SerializeField] Text wordDisplay;
+    [SerializeField] Text correctLetterDisplay;
+    [SerializeField] Text timerDisplay;
 
     private int currentScore;
     private int hiScore;
@@ -21,6 +23,7 @@ public class GameController : MonoBehaviour {
     private int currentWord = 0;
     private int currentPosInWord = 0;
     private bool isReadyForNewWord = true;
+    private int timer;
 
     private static GameController instance = null;
 
@@ -34,7 +37,15 @@ public class GameController : MonoBehaviour {
     #region GameController Functions
     void GameOver()
     {
-        //Set up game score and the like here.
+        CancelInvoke();
+
+        //Display high scores.
+        //Won't save over multiple sessions.
+        currentScoreCounter.text = currentScore + "";
+        if (currentScore > hiScore) {
+            hiScore = currentScore;
+            hiScoreCounter.text = endingHiScoreCounter.text = hiScore + "";
+        }
         inGame.SetActive(false);
         endMenu.SetActive(true);
     }
@@ -45,27 +56,67 @@ public class GameController : MonoBehaviour {
     }
 
     private void ShowAndHideMole() {
-        // loop thru all moles and give them a random letter
+        //animation will go here? (lerp)
+        InjectCorrectLetter();
+        //animation makes it pop back up.
+    }
+
+    private void InjectCorrectLetter() {
+        char[] letters = new char[moles.Length];
+        //add correct letter to the list.
+        letters[0] = wordList[currentWord][currentPosInWord];
+
+        //add dummy letters (and no dupes of the correct letter)
+        for (int i = 1; i < letters.Length; i++) {
+            bool ok = false;
+            while (!ok) {
+                char toAdd = Convert.ToChar(Constants.Functions.RandomLetter());
+                if (toAdd != wordList[currentWord][currentPosInWord]) {
+                    letters[i] = toAdd;
+                    ok = true;
+                }
+            }
+        }
+
+        //shuffle...
+        for (int i = 0; i < letters.Length; i++) {
+            char tmp1 = letters[i];
+            int j = UnityEngine.Random.Range(i, letters.Length);
+            letters[i] = letters[j];
+            letters[j] = tmp1;
+        }
+
+        //...and display
         for (int i = 0; i < moles.Length; i++) {
-            moles[i].GetComponent<Mole>().SetText(Constants.Functions.RandomLetter());
+            moles[i].GetComponent<Mole>().SetText(letters[i]+"");
         }
     }
 
     public void ReceiveLetter(string letterIn) {
         if (wordList[currentWord][currentPosInWord] == Convert.ToChar(letterIn)) {
-            wordDisplay.text = (wordDisplay.text + Convert.ToString(letterIn));
+            correctLetterDisplay.text = (correctLetterDisplay.text + Convert.ToString(letterIn));
             currentPosInWord++;
-            if (wordDisplay.text == wordList[currentWord]) {
+            if (correctLetterDisplay.text == wordList[currentWord]) {
                 currentWord++;
                 currentPosInWord = 0;
                 isReadyForNewWord = true;
-                Invoke("HideDisplayedWord", 4f);
+
+                currentScore++;
+                currentScoreCounter.text = currentScore + "";
                 for (int i = 0; i < moles.Length; i++) {
                     moles[i].GetComponent<Mole>().SetText("");
                 }
             }
         }
         else {
+            GameOver();
+        }
+    }
+
+    public void TimerTick() {
+        timer--;
+        timerDisplay.text = timer + "";
+        if (timer <= 0) {
             GameOver();
         }
     }
@@ -80,8 +131,8 @@ public class GameController : MonoBehaviour {
         for (int i = 0; i < moles.Length; i++) {
             moles[i].GetComponent<BoxCollider>().enabled = true;
         }
-        InvokeRepeating("ShowAndHideMole", 0f, 1.5f/*Constants.Functions.RandomNumber(1, 3)*/);
-        Invoke("HideDisplayedWord", 4f);
+        InvokeRepeating("ShowAndHideMole", 0f, 2.5f/*Constants.Functions.RandomNumber(1, 3)*/);
+        //Invoke("HideDisplayedWord", 4f);
         inGame.SetActive(true);
     }
 
@@ -93,7 +144,18 @@ public class GameController : MonoBehaviour {
     public void RestartGame()
     {
         endMenu.SetActive(false);
-        //Reset game state here.
+
+        timer = 60;
+        currentScore = 0;
+        currentScoreCounter.text = "0";
+        timerDisplay.text = "60";
+
+        currentWord = 0;
+        currentPosInWord = 0;
+        correctLetterDisplay.text = "";
+        wordList = (string[])Constants.Functions.ShuffleStringArray(Constants.Words.wordListOne).Clone();
+        isReadyForNewWord = true;
+
         inGame.SetActive(true);
     }
     #endregion
@@ -116,7 +178,9 @@ public class GameController : MonoBehaviour {
         inGame.SetActive(false);
         currentScore = 0;
         hiScore = 0; // Might need to read from a file or PlayerPreferences here.
+        timer = 60;
         wordList = (string[])Constants.Functions.ShuffleStringArray(Constants.Words.wordListOne).Clone();
+        InvokeRepeating("TimerTick", 0f, 1f);
 
         //InvokeRepeating("ShowAndHideMole", 0f, 1.5f/*Constants.Functions.RandomNumber(1, 3)*/);
         //Invoke("HideDisplayedWord", 4f);
@@ -133,7 +197,8 @@ public class GameController : MonoBehaviour {
                 }
                 else {
                     wordDisplay.text = wordList[currentWord];
-                    //Invoke("HideDisplayedWord", 4f);
+                    correctLetterDisplay.text = "";
+                    isReadyForNewWord = false;
                 }
             }
             else {
