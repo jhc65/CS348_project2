@@ -13,6 +13,12 @@ public static class Constants {
         public static float moleHidePosition_y = 6.0f;
     }
 
+    public static class Colors_RichText {
+        public static string rt_green = "color=#00ff00ff";
+        public static string rt_red = "color=#ff0000ff";
+        public static string rt_endTag = "</color>";
+    }
+
     public static class Functions {
         public static int RandomNumber(int start, int end) {
             return Random.Range(start, end);
@@ -32,6 +38,58 @@ public static class Constants {
             }
 
             return arrayIn;
+        }
+
+        public static string ColorCharacter_Next(string inString, string color) {
+            string output = "";
+
+            if (inString.StartsWith("<color")) {
+                int endtagPosition = inString.IndexOf("</color>");
+                output = inString.Substring(0, endtagPosition);
+                output += inString.Substring((endtagPosition + 1), 1);
+                output += "</color>";
+                int temp = endtagPosition + 2;
+                output += inString.Substring(temp, (inString.Length - temp));
+            }
+            else {
+                output = "<" + color + ">";
+
+                output += inString.Substring(0, 1);
+                output += "</color>";
+                output += inString.Substring(1, (inString.Length - 1));
+
+                //if (charToChange == 0) {
+                //    output += inString.Substring(charToChange, 1);
+                //    output += "</color>";
+                //    if (charToChange != (inString.Length - 1)) {
+                //        int temp = charToChange + 1;
+                //        output += inString.Substring(temp, (inString.Length - temp));
+                //    }
+                //}
+            }
+
+            return output;
+        }
+
+        public static string ColorCharacter_Current(string inString, string color) {
+            string output = "";
+
+            if (inString.StartsWith("<color")) {
+                int endTagPos = inString.IndexOf("</color>");
+                output = inString.Substring(0, (endTagPos - 1));
+                output += "</color>";
+                output += "<" + color + ">";
+                output += inString.Substring((endTagPos - 1), (inString.Length - 1));
+            }
+            else {
+                output = "<" + color + ">";
+
+                output += inString.Substring(0, 1);
+                output += "</color>";
+                output += inString.Substring(1, (inString.Length - 1));
+            }
+
+            return output;
         }
     }
 }
