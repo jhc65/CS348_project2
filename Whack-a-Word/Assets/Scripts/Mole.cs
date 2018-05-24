@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class Mole : MonoBehaviour
 {
     #region Variables and Delcarations
-    [SerializeField] private Text displayText;
+    [SerializeField] public Text displayText;
 
     private GameController gc;
     #endregion

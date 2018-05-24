@@ -12,10 +12,14 @@ public class GameController : MonoBehaviour {
     [SerializeField] Text currentScoreCounter;
     [SerializeField] Text hiScoreCounter;
     [SerializeField] Text endingHiScoreCounter;
+    [SerializeField] Text endingHiScoreAlert;
     [SerializeField] GameObject[] moles;
     [SerializeField] Text wordDisplay;
     [SerializeField] Text correctLetterDisplay;
     [SerializeField] Text timerDisplay;
+    [SerializeField] float stepSize;
+    [SerializeField] Image checkmark;
+    [SerializeField] Image crossmark;
 
     private int currentScore;
     private int hiScore;
@@ -24,6 +28,8 @@ public class GameController : MonoBehaviour {
     private int currentPosInWord = 0;
     private bool isReadyForNewWord = true;
     private int timer;
+    Vector3[] endPoints = new Vector3[5];
+   
 
     private static GameController instance = null;
 
@@ -38,13 +44,16 @@ public class GameController : MonoBehaviour {
     void GameOver()
     {
         CancelInvoke();
-
+        endingHiScoreAlert.gameObject.SetActive(false);
         //Display high scores.
         //Won't save over multiple sessions.
         currentScoreCounter.text = currentScore + "";
         if (currentScore > hiScore) {
             hiScore = currentScore;
             hiScoreCounter.text = endingHiScoreCounter.text = hiScore + "";
+            endingHiScoreAlert.gameObject.SetActive(true);
+        } else {
+            endingHiScoreCounter.text = currentScore + "";
         }
         inGame.SetActive(false);
         endMenu.SetActive(true);
@@ -56,9 +65,65 @@ public class GameController : MonoBehaviour {
     }
 
     private void ShowAndHideMole() {
-        //animation will go here? (lerp)
+        DipDownSetUp();
+    }
+
+    private void DipDownSetUp() {
+        for (int i = 0; i < endPoints.Length; i++) {
+            endPoints[i] = moles[i].transform.position + new Vector3(0,-130,0);
+            moles[i].GetComponent<Mole>().displayText.gameObject.transform.parent.gameObject.SetActive(false);
+        }
+
+        StartCoroutine(DipDown());
+    }
+
+    private IEnumerator DipDown() {
+        bool complete = false;
+
+        while (!complete) {
+            for (int i = 0; i < moles.Length; i++) {
+                moles[i].transform.position = Vector3.MoveTowards(moles[i].transform.position, endPoints[i], stepSize);
+                if (Vector3.Distance(moles[i].transform.position, endPoints[i]) < 0.25f) {
+                    complete = true;
+                } 
+            }
+            yield return new WaitForSecondsRealtime(0.01f);
+        }
+
         InjectCorrectLetter();
-        //animation makes it pop back up.
+        yield return null;
+    }
+
+    private void DipUpSetUp() {
+        for (int i = 0; i < endPoints.Length; i++) {
+            endPoints[i] = moles[i].transform.position + new Vector3(0,130,0);
+        }
+
+        StartCoroutine(DipUp());
+
+    }
+
+    private IEnumerator DipUp() {
+        bool complete = false;
+
+        while (!complete) {
+            for(int i = 0; i < moles.Length; i++) {
+                moles[i].transform.position = Vector3.MoveTowards(moles[i].transform.position,endPoints[i], stepSize);
+                if (Vector3.Distance(moles[i].transform.position, endPoints[i]) < 0.25f) {
+                    complete = true;
+                }
+            }
+            yield return new WaitForSecondsRealtime(0.02f);
+        }
+
+
+        for (int i = 0; i < moles.Length; i++) {
+            moles[i].GetComponent<Mole>().displayText.gameObject.transform.parent.gameObject.SetActive(true);
+        }
+
+        checkmark.gameObject.SetActive(false);
+        crossmark.gameObject.SetActive(false);
+        yield return null;
     }
 
     private void InjectCorrectLetter() {
@@ -90,12 +155,15 @@ public class GameController : MonoBehaviour {
         for (int i = 0; i < moles.Length; i++) {
             moles[i].GetComponent<Mole>().SetText(letters[i]+"");
         }
+         DipUpSetUp();
+
     }
 
     public void ReceiveLetter(string letterIn) {
         if (wordList[currentWord][currentPosInWord] == Convert.ToChar(letterIn)) {
             correctLetterDisplay.text = (correctLetterDisplay.text + Convert.ToString(letterIn));
             currentPosInWord++;
+            checkmark.gameObject.SetActive(true);
             if (correctLetterDisplay.text == wordList[currentWord]) {
                 currentWord++;
                 currentPosInWord = 0;
@@ -106,11 +174,18 @@ public class GameController : MonoBehaviour {
                 for (int i = 0; i < moles.Length; i++) {
                     moles[i].GetComponent<Mole>().SetText("");
                 }
+                ShowAndHideMole();
+            } else {
+                ShowAndHideMole();
             }
+        } else {
+            crossmark.gameObject.SetActive(true);
+            ShowAndHideMole();
         }
-        else {
-            GameOver();
-        }
+    }
+
+    private void FadeCorrect() {
+        
     }
 
     public void TimerTick() {
@@ -120,6 +195,8 @@ public class GameController : MonoBehaviour {
             GameOver();
         }
     }
+
+    
     #endregion
 
     #region GameController UI Methods
@@ -131,7 +208,7 @@ public class GameController : MonoBehaviour {
         for (int i = 0; i < moles.Length; i++) {
             moles[i].GetComponent<BoxCollider>().enabled = true;
         }
-        InvokeRepeating("ShowAndHideMole", 0f, 2.5f/*Constants.Functions.RandomNumber(1, 3)*/);
+        ShowAndHideMole();
         //Invoke("HideDisplayedWord", 4f);
         inGame.SetActive(true);
     }
@@ -155,6 +232,10 @@ public class GameController : MonoBehaviour {
         correctLetterDisplay.text = "";
         wordList = (string[])Constants.Functions.ShuffleStringArray(Constants.Words.wordListOne).Clone();
         isReadyForNewWord = true;
+        InvokeRepeating("TimerTick", 0f, 1f);
+
+        checkmark.gameObject.SetActive(false);
+        crossmark.gameObject.SetActive(false);
 
         inGame.SetActive(true);
     }
@@ -199,6 +280,7 @@ public class GameController : MonoBehaviour {
                     wordDisplay.text = wordList[currentWord];
                     correctLetterDisplay.text = "";
                     isReadyForNewWord = false;
+                    ShowAndHideMole();
                 }
             }
             else {
