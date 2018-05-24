@@ -157,6 +157,8 @@ public class GameController : MonoBehaviour {
         isReadyForNewWord = true;
 
         inGame.SetActive(true);
+        InvokeRepeating("TimerTick", 0f, 1f);
+        InvokeRepeating("ShowAndHideMole", 0f, 2.5f/*Constants.Functions.RandomNumber(1, 3)*/);
     }
     #endregion
 
